@@ -1,0 +1,3 @@
+when you connect to database remember-
+1. always use try catch approach
+2. databases are always in another continent(use async await)
