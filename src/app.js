@@ -10,7 +10,7 @@ app.use(
     credentials: true,
   })
 ); // app er sthe 'use' beshirvag khetre bebhorito hy middleware er jnno
-
+// app.use(upload.array());
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
