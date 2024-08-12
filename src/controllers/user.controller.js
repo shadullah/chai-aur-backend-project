@@ -260,7 +260,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullname, email } = req.body;
 
-  if (!fullname || !email) {
+  if (!(fullname || email)) {
     throw new ApiError(400, "all fields are required");
   }
 
@@ -295,7 +295,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading the avatar");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -317,17 +317,17 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "cover image file is missing");
   }
 
-  const coverImage = await uploadOnCloudinary(avatarLocalPath);
+  const coverImage = await uploadOnCloudinary(CoverLocalPath);
 
   if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading the cover image");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        coverImage: avat.url,
+        coverImage: coverImage.url,
       },
     },
     { new: true }
@@ -412,10 +412,11 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 
 const getWatchHistory = asyncHandler(async (req, res) => {
+  const userId = new mongoose.Types.ObjectId(req.user._id);
   const user = await User.aggregate([
     {
       $match: {
-        _id: new mongoose.ObjectId(req.user._id),
+        _id: userId,
       },
     },
     {
@@ -459,7 +460,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        user[0].watchHistory,
+        user[0]?.watchHistory,
         "watch history fetched successfully"
       )
     );
