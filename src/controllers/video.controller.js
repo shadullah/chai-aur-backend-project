@@ -9,9 +9,52 @@ const getAllVideo = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
   let getAllVideo;
+  try {
+    getAllVideo = Video.aggregate([
+      {
+        $sample: {
+          size: parseInt(limit),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "details",
+          pipeline: [
+            {
+              $project: {
+                fullname: 1,
+                avatar: 1,
+                username: 1,
+              },
+            },
+          ],
+        },
+      },
 
-  const 
+      {
+        $addFields: {
+          details: {
+            $first: "$details",
+          },
+        },
+      },
+    ]);
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong while fetching Videos !!");
+  }
 
+  const result = await Video.aggregatePaginate(getAllVideo, { page, limit });
+
+  if (result.docs.length == 0) {
+    return res.status(200).json(new ApiResponse(200, [], "No Video Found"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result.docs, "Videos fetched Succesfully !"));
 });
 
 const publishVideo = asyncHandler(async (req, res) => {
@@ -58,4 +101,4 @@ const publishVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, uploadVideo, "Video uploaded successfully"));
 });
 
-export { publishVideo };
+export { publishVideo, getAllVideo };
